@@ -1,6 +1,8 @@
 import compileToFunction from './compileToFunction.js'
+import mountComponent from './mountComponent.js'
 
 export default function mount(vm) {
+  // 编译
   if (!vm.$options.render) {
     // 获取模板
     let template = ''
@@ -14,7 +16,10 @@ export default function mount(vm) {
 
     // 生成渲染函数
     const render = compileToFunction(template)
+    // console.log(render)
 
     vm.$options.render = render
   }
+  // 挂载
+  mountComponent(vm)
 }
