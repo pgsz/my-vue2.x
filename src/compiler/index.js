@@ -11,7 +11,8 @@ export default function mount(vm) {
       template = vm.$options.template
     } else if (vm.$options.el) {
       // <div id='app'></div>
-      template = document.querySelector(vm.$options.el).outerHTML
+      vm.$el = document.querySelector(vm.$options.el)
+      template = vm.$el.outerHTML
     }
 
     // 生成渲染函数
