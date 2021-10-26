@@ -87,4 +87,62 @@ function createTextVNode(textVnode) {
   return textNode
 }
 
-function setAttribute() {}
+/**
+ * 给节点设置属性
+ */
+function setAttribute(attr, vnode) {
+  // 遍历属性对象：普通属性，直接设置；指令，特殊处理
+  for (const name in attr) {
+    if (name === 'vModel') {
+      setVModel(vnode.tag, attr.vModel.value, vnode)
+    } else if (name === 'vBind') {
+      setVBind()
+    } else if (name === 'vOn') {
+      setVOn()
+    } else {
+      // 普通属性
+      vnode.elm.setAttribute(name, attr[name])
+    }
+  }
+}
+
+/**
+ * v-model 原理
+ * @param {*} tag 标签名
+ * @param {*} value  属性值
+ * @param {*} vnode  节点
+ */
+function setVModel(tag, value, vnode) {
+  const { context: vm, elm } = vnode
+  if (tag === 'select') {
+    // 延迟设置， option 元素还没创建
+    Promise.resolve().then(() => {
+      elm.value = vm[value]
+    })
+    elm.addEventListener('change', function () {
+      vm[value] = elm.value
+    })
+  } else if (tag === 'input' && vnode.elm.type === 'text') {
+    // <input type="input" v-model="test" />
+    elm.value = vm[value]
+    elm.addEventListener('input', function () {
+      vm[value] = elm.value
+    })
+  } else if (tag === 'input' && vnode.elm.type === 'checkbox') {
+    // <input type="checkbox" v-model="test" />
+    elm.checked = vm[value]
+    elm.addEventListener('change', function () {
+      vm[value] = elm.checked
+    })
+  }
+}
+
+/**
+ * v-bind 指令原理
+ * <span v-bind:title='test'></span>
+*/
+function setVBind(vnode) {
+
+}
+
+function setVOn() {}

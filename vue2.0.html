@@ -6,6 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vue2.x</title>
   </head>
+  <style>
+    body {
+      padding-left: 150px;
+    }
+  </style>
 
   <body>
     <div id="app">
@@ -139,40 +144,40 @@
         },
       })
       // 数据响应式拦截
-      setTimeout(() => {
-        console.log('********** 属性值为原始值时的 getter、setter ************')
-        console.log(ins.t)
-        ins.t = 'change t value'
-        console.log(ins.t)
-      }, 1000)
+      // setTimeout(() => {
+      //   console.log('********** 属性值为原始值时的 getter、setter ************')
+      //   console.log(ins.t)
+      //   ins.t = 'change t value'
+      //   console.log(ins.t)
+      // }, 1000)
 
-      setTimeout(() => {
-        console.log('********** 属性的新值为对象的情况 ************')
-        ins.t = {
-          tt: 'tt value',
-        }
-        console.log(ins.t.tt)
-      }, 2000)
+      // setTimeout(() => {
+      //   console.log('********** 属性的新值为对象的情况 ************')
+      //   ins.t = {
+      //     tt: 'tt value',
+      //   }
+      //   console.log(ins.t.tt)
+      // }, 2000)
 
-      setTimeout(() => {
-        console.log('********** 验证对深层属性的 getter、setter 拦截 ************')
-        ins.t1.tt1 = 'change tt1 value'
-        console.log(ins.t1.tt1)
-      }, 3000)
+      // setTimeout(() => {
+      //   console.log('********** 验证对深层属性的 getter、setter 拦截 ************')
+      //   ins.t1.tt1 = 'change tt1 value'
+      //   console.log(ins.t1.tt1)
+      // }, 3000)
 
-      setTimeout(() => {
-        console.log('********** 将值为对象的属性更新为原始值 ************')
-        console.log(ins.t1)
-        ins.t1 = 't1 value'
-        console.log(ins.t1)
-      }, 4000)
+      // setTimeout(() => {
+      //   console.log('********** 将值为对象的属性更新为原始值 ************')
+      //   console.log(ins.t1)
+      //   ins.t1 = 't1 value'
+      //   console.log(ins.t1)
+      // }, 4000)
 
-      setTimeout(() => {
-        console.log('********** 数组操作方法的拦截 ************')
-        console.log(ins.arr)
-        ins.arr.push(4)
-        console.log(ins.arr)
-      }, 5000)
+      // setTimeout(() => {
+      //   console.log('********** 数组操作方法的拦截 ************')
+      //   console.log(ins.arr)
+      //   ins.arr.push(4)
+      //   console.log(ins.arr)
+      // }, 5000)
     </script>
   </body>
 </html>
