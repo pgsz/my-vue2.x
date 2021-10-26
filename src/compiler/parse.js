@@ -1,4 +1,4 @@
-import isUnaryTag from '../utils.js'
+import { isUnaryTag } from '../utils.js'
 
 export default function parse(template) {
   // 最终返回的 ast
@@ -34,9 +34,9 @@ export default function parse(template) {
       if (stack.length) {
         // stack 不为空，说明文本是栈顶元素的文本节点
         processChars(html.slice(0, nextStartIdx))
-        // 将文本从 html 中截取掉
-        html = html.slice(nextStartIdx)
       }
+      // 将文本从 html 中截取掉
+      html = html.slice(nextStartIdx)
     } else {
       // 整个模板中没有标签信息，一段纯文本
     }

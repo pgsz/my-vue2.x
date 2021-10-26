@@ -1,15 +1,19 @@
+import Vue from '../index.js'
+import { isReserveTag } from '../utils.js'
+
 /**
  * 负责初始化渲染和后续更新
  */
 export default function patch(oldVnode, vnode) {
-  console.log(oldVnode)
-  console.log(vnode)
+  // console.log(oldVnode)
+  // console.log(vnode)
   if (oldVnode && !vnode) {
     // 老的存在，新的不存在 --- 销毁组件
     return
   }
   if (!oldVnode) {
     // 子组件首次渲染
+    createElm(vnode)
   } else {
     if (oldVnode.nodeType) {
       // 真实节点，则表示首次渲染根组件
@@ -39,7 +43,7 @@ function createElm(vnode, parent, referNode) {
 
   // 创建自定义组件，如果是非组件，继续后续流程
   if (createComponent(vnode)) return
-
+  
   // 当前节点是元素标签，走 DOM API 创建标签，然后添加到父节点
   const { tag, attr, children, text } = vnode
 
@@ -67,7 +71,31 @@ function createElm(vnode, parent, referNode) {
   }
 }
 
-function createComponent() {}
+/**
+ * 创建自定义组件
+ */
+function createComponent(vnode) {
+  if (vnode.tag && !isReserveTag(vnode.tag)) {
+    // 获取组件的基本配置信息
+    const {
+      tag,
+      context: {
+        $options: { components },
+      },
+    } = vnode
+    const compOptions = components[tag]
+    // 实例化子组件
+    const compIns = new Vue(compOptions)
+    // 把父组件的 vnode 放入 子组件的实例上
+    // 手动执行挂载
+    compIns.$mount()
+    // 记录子组件 vnode 的父节点信息
+    // compIns._vnode.parent = vnode.parent
+    // 将子组件添加到父节点内
+    vnode.parent.appendChild(compIns._vnode.elm)
+    return true
+  }
+}
 
 /**
  * 创建文本节点
