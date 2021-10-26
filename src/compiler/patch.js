@@ -96,9 +96,9 @@ function setAttribute(attr, vnode) {
     if (name === 'vModel') {
       setVModel(vnode.tag, attr.vModel.value, vnode)
     } else if (name === 'vBind') {
-      setVBind()
+      setVBind(vnode)
     } else if (name === 'vOn') {
-      setVOn()
+      setVOn(vnode)
     } else {
       // 普通属性
       vnode.elm.setAttribute(name, attr[name])
@@ -135,14 +135,38 @@ function setVModel(tag, value, vnode) {
       vm[value] = elm.checked
     })
   }
+  elm.removeAttribute(`v-model`)
 }
 
 /**
  * v-bind 指令原理
  * <span v-bind:title='test'></span>
-*/
+ */
 function setVBind(vnode) {
-
+  const {
+    attr: { vBind },
+    elm,
+    context: vm,
+  } = vnode
+  for (const attrName in vBind) {
+    elm.setAttribute(attrName, vm[vBind[attrName]])
+    elm.removeAttribute(`v-bind:${attrName}`)
+  }
 }
 
-function setVOn() {}
+/**
+ * v-on 指令原理
+ */
+function setVOn(vnode) {
+  const {
+    attr: { vOn },
+    elm,
+    context: vm,
+  } = vnode
+  for (const eventName in vOn) {
+    elm.addEventListener(eventName, function (...args) {
+      vm.$options.methods[vOn[eventName]].apply(vm, args)
+    })
+    elm.removeAttribute(`v-on:${eventName}`)
+  }
+}
