@@ -151,11 +151,36 @@ export default function parse(template) {
       // 处理普通属性，暂不处理，直接放在 元素上
     }
 
+    // 处理插槽内容
+    processSlotContent(curEle)
+    
     // 节点属性处理完之后，将其和父节点挂钩
     const stackLen = stack.length
     if (stackLen) {
       stack[stackLen - 1].children.push(curEle)
       curEle.parent = stack[stackLen - 1]
+
+      // 如果节点存在 slotName，说明该节点是组件传递给插槽的内容
+      // 将插槽信息放到组件节点的 rawAttr.scopedSlots 对象上
+      // 这些信息会在生成组件插槽的 vnode 时（renderSlot）使用到
+      if (curEle.slotName) {
+        const { parent, slotName, scopeSlot, children } = curEle
+        // 构造插槽信息
+        const slotInfo = {
+          slotName,
+          scopeSlot,
+          children: children.map(item => {
+            // 为了避免 JSON.stringify(attr) 循环引用而爆栈
+            delete item.parent
+            return item
+          }),
+        }
+        if (parent.rawAttr.scopeSlots) {
+          parent.rawAttr.scopeSlots[curEle.slotName] = slotInfo
+        } else {
+          parent.rawAttr.scopeSlots = { [curEle.slotName]: slotInfo }
+        }
+      }
     }
   }
 
@@ -224,5 +249,31 @@ export default function parse(template) {
     }
     // 文本节点放到栈顶元素的 children 里面
     stack[stack.length - 1].children.push(textAst)
+  }
+}
+
+/**
+ * <scope-slot>
+ *    <template v-slot:default="scopeSlot">
+ *        <div>{{ scopeSlot }}</div>
+ *    </template>
+ * </scope-slot>
+ */
+function processSlotContent(el) {
+  // 具有 v-slot:xx 属性 template 标签只能是组件的根元素
+  if (el.tag === 'template') {
+    const attrMap = el.rawAttr
+    // 遍历 Map 对象，找出其中的 v-slot 指令的信息
+    for (const attr in attrMap) {
+      if (attr.match(/v-slot:(.*)/)) {
+        // template 上有 v-slot 指令
+        // 获取插槽名称
+        const slotName = (el.slotName = RegExp.$1)
+        // 获取作用域插槽的值
+        el.scopeSlot = attrMap[`v-slot:${slotName}`]
+        // 标签上只可能有一个 v-slot 指令
+        return
+      }
+    }
   }
 }
