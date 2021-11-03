@@ -26,7 +26,7 @@ export default function patch(oldVnode, vnode) {
       parent.removeChild(oldVnode)
     } else {
       // 后续更新
-      console.log('update')
+      patchVnode(oldVnode, vnode)
     }
   }
 }
@@ -43,7 +43,7 @@ function createElm(vnode, parent, referNode) {
 
   // 创建自定义组件，如果是非组件，继续后续流程
   if (createComponent(vnode)) return
-  
+
   // 当前节点是元素标签，走 DOM API 创建标签，然后添加到父节点
   const { tag, attr, children, text } = vnode
 
@@ -87,6 +87,7 @@ function createComponent(vnode) {
     // 实例化子组件
     const compIns = new Vue(compOptions)
     // 把父组件的 vnode 放入 子组件的实例上
+    compIns._parentVnode = vnode
     // 手动执行挂载
     compIns.$mount()
     // 记录子组件 vnode 的父节点信息
@@ -197,4 +198,115 @@ function setVOn(vnode) {
     })
     elm.removeAttribute(`v-on:${eventName}`)
   }
+}
+
+/**
+ * 对比新老节点（oldVnode 和 vnode），找出不同，并更新老节点
+ */
+function patchVnode(oldVnode, vnode) {
+  // 新老节点相同
+  if (oldVnode === vnode) return
+
+  // 将老 vnode 上的真实节点同步到新的 vnode 上，避免后续更新的时候出现 vnode.elm 为空
+  vnode.elm = oldVnode.elm
+
+  // 新老节点的子节点
+  const ch = vnode.children
+  const oldCh = oldVnode.children
+
+  if (!vnode.text) {
+    // 新节点不存在文本节点
+    if (ch && oldCh) {
+      // 新老节点都有子节点
+      updateChildren(ch, oldCh)
+    } else if (ch) {
+      // 老节点没有，新节点有，则新增
+    } else if (oldCh) {
+      // 老节点有，新节点无，则删除老节点的子节点
+    }
+  } else {
+    // 新节点存在文本节点
+    if (vnode.text.expression) {
+      // 存在表达式
+      // 获取表达式的新值
+      const value = JSON.stringify(vnode.context[vnode.text.expression])
+      try {
+        const oldValue = oldVnode.elm.textContent
+        if (value !== oldValue) {
+          oldVnode.elm.textContent = value
+        }
+      } catch {
+        // 防止更新时遇到插槽，导致报错
+      }
+    }
+  }
+}
+
+/**
+ * diff 对比子节点，找出不同点，然后将不同点更新到老节点上
+ * 具体的更新由 patchVnode 完成，涉及递归
+ */
+function updateChildren(ch, oldCh) {
+  // 四个游标
+  // 新前索引
+  let newStartIdx = 0
+  // 新后
+  let newEndIdx = ch.length - 1
+  // 老前
+  let oldStartIdx = 0
+  // 老后
+  let oldEndIdx = oldCh.length - 1
+
+  // 遍历 循环遍历新老节点，找出不一样的地方，然后更新
+  // 四种假设，降低时间复杂度
+  while (newStartIdx <= newEndIdx || oldStartIdx <= oldEndIdx) {
+    // 新前节点
+    const newStartNode = ch[newStartIdx]
+    const newEndNode = ch[newEndIdx]
+    const oldStartNode = oldCh[oldStartIdx]
+    const oldEndNode = oldCh[oldEndIdx]
+
+    if (sameVnode(newStartNode, oldStartNode)) {
+      // 新前 和 老前
+      patchVnode(oldStartNode, newStartNode)
+      oldStartIdx++
+      newStartIdx++
+    } else if (sameVnode(newStartNode, oldEndNode)) {
+      // 新前 和 老后
+      patchVnode(oldEndNode, newStartNode)
+      // 将老节点移动到新开始的位置
+      oldEndNode.elm.parentNode.insertBefore(oldEndNode.elm, oldCh[newStartIdx].elm)
+      oldEndIdx--
+      newStartIdx++
+    } else if ((newEndNode, oldStartNode)) {
+      // 新后 和 老前
+      patchVnode(oldStartNode, newEndNode)
+      // 将老开始节点移动到新结束位置
+      oldEndNode.elm.parentNode.insertBefore(oldStartNode.elm, oldCh[newEndIdx].elm.nextSibling)
+      oldStartIdx++
+      newEndIdx--
+    } else if ((newEndNode, oldEndNode)) {
+      // 新后 和 老后
+      patchVnode(oldEndNode, newEndNode)
+      oldEndIdx--
+      newEndIdx--
+    } else {
+      // 都没命中，则遍历找出新老 vnode 的相同节点
+    }
+  }
+
+  // 跳出循环，说明某个节点已经遍历结束
+  if (newStartIdx < newEndIdx) {
+    // 老节点先遍历结束，需要将剩余新节点添加到 DOM 中
+  } else if (oldStartIdx < oldEndIdx) {
+    // 新节点先遍历结束，将剩余的老节点删除
+  }
+}
+
+/**
+ * 判断两个节点是否是同一个节点
+ */
+function sameVnode(a, b) {
+  // 简单判断，只比较 key 和 tag
+  return a.key === b.key && a.tag === b.tag
 }

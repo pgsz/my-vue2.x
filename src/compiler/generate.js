@@ -17,6 +17,10 @@ function genElement(el) {
   // 合并处理
   const attrs = { ...rawAttr, ...attr }
   const children = genChildren(el)
+  if (tag === 'slot') {
+    // 生成插槽的处理函数
+    return `_t(${JSON.stringify(attrs)}, [${children}])`
+  }
   return `_c('${tag}', ${JSON.stringify(attrs)}, [${children}])`
 }
 

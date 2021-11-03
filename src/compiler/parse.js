@@ -175,10 +175,10 @@ export default function parse(template) {
             return item
           }),
         }
-        if (parent.rawAttr.scopeSlots) {
-          parent.rawAttr.scopeSlots[curEle.slotName] = slotInfo
+        if (parent.rawAttr.scopedSlots) {
+          parent.rawAttr.scopedSlots[curEle.slotName] = slotInfo
         } else {
-          parent.rawAttr.scopeSlots = { [curEle.slotName]: slotInfo }
+          parent.rawAttr.scopedSlots = { [curEle.slotName]: slotInfo }
         }
       }
     }
