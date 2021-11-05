@@ -32,3 +32,6 @@
 
 响应式数据发生更新 -> setter 拦截到更新操作 -> dep 通知 watcher 执行 update 方法 -> 进而执行 updateComponent 方法更新组件 -> 执行 render 生成新的 vnode -> 将 vnode 传递给 vm._update 方法 -> 调用 patch 方法 -> 执行 patchVnode 进行 DOM diff 操作 -> 完成更新
 
+
+依赖收集结束之后，当响应式数据发生变化 -> 触发 setter 执行 dep.notify -> 让 dep 通知 自己收集的所有 watcher 执行 update 方法 -> watch.update 调用 queueWatcher 将自己放到 watcher 队列 -> 接下来调用 nextTick 方法将刷新 watcher 队列的方法放到 callbacks 数组 -> 然后将刷新 callbacks 数组的方法放到浏览器的异步任务队列 -> 待将来执行时最终触发 watcher.run 方法，执行 watcher.get 方法。
+
